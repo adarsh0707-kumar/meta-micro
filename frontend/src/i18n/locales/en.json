@@ -1,0 +1,63 @@
+{
+  "app_name": "meta-micro",
+  "nav": {
+    "students": "Students",
+    "batches": "Batches",
+    "fees": "Fees",
+    "attendance": "Attendance",
+    "test_scores": "Test Scores",
+    "templates": "Templates",
+    "fee_reminders": "Fee Reminders",
+    "parent_updates": "Parent Updates",
+    "automations": "Automations",
+    "setup": "Setup",
+    "logout": "Log out"
+  },
+  "landing": {
+    "eyebrow": "Built for coaching centres in Patna",
+    "title": "Run your coaching centre without the paperwork chaos",
+    "subtitle": "Manage students and batches, track fees, mark attendance, and send fee reminders straight to WhatsApp — in Hindi or English.",
+    "cta": "Get started free",
+    "cta_secondary": "I already have an account",
+    "feature_fees": "Fee reminders",
+    "feature_fees_desc": "Automatic WhatsApp nudges before the due date.",
+    "feature_attendance": "Attendance",
+    "feature_attendance_desc": "Mark a whole batch present in a few taps.",
+    "feature_scores": "Test scores",
+    "feature_scores_desc": "Enter marks once, generate reports instantly.",
+    "feature_whatsapp": "WhatsApp workflows",
+    "feature_whatsapp_desc": "Bilingual templates parents actually read."
+  },
+  "auth": {
+    "login_title": "Welcome back",
+    "login_subtitle": "Log in to manage your coaching centre.",
+    "signup_title": "Set up your coaching centre",
+    "signup_subtitle": "Takes two minutes. No credit card needed.",
+    "institute_name": "Institute name",
+    "city": "City",
+    "admin_name": "Your name",
+    "email": "Email",
+    "password": "Password",
+    "login_button": "Log in",
+    "signup_button": "Create account",
+    "no_account": "Don't have an account?",
+    "have_account": "Already have an account?",
+    "sign_up_link": "Sign up",
+    "login_link": "Log in",
+    "forgot_password": "Forgot password?"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "add": "Add",
+    "search": "Search",
+    "loading": "Loading…",
+    "actions": "Actions",
+    "edit": "Edit",
+    "delete": "Delete",
+    "name": "Name",
+    "phone": "Phone",
+    "status": "Status",
+    "language": "Language"
+  }
+}

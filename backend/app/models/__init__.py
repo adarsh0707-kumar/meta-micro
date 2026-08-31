@@ -1,0 +1,33 @@
+from app.models.models import (
+    Attendance,
+    AttendanceStatus,
+    AutomationSetting,
+    Batch,
+    Fee,
+    FeeStatus,
+    Institute,
+    MessageLog,
+    Student,
+    Template,
+    TemplateCategory,
+    TestScore,
+    User,
+    UserRole,
+)
+
+__all__ = [
+    "Attendance",
+    "AttendanceStatus",
+    "AutomationSetting",
+    "Batch",
+    "Fee",
+    "FeeStatus",
+    "Institute",
+    "MessageLog",
+    "Student",
+    "Template",
+    "TemplateCategory",
+    "TestScore",
+    "User",
+    "UserRole",
+]

@@ -1,0 +1,63 @@
+{
+  "app_name": "meta-micro",
+  "nav": {
+    "students": "विद्यार्थी",
+    "batches": "बैच",
+    "fees": "फीस",
+    "attendance": "उपस्थिति",
+    "test_scores": "टेस्ट स्कोर",
+    "templates": "टेम्पलेट",
+    "fee_reminders": "फीस रिमाइंडर",
+    "parent_updates": "अभिभावक अपडेट",
+    "automations": "ऑटोमेशन",
+    "setup": "सेटअप",
+    "logout": "लॉग आउट"
+  },
+  "landing": {
+    "eyebrow": "पटना के कोचिंग सेंटरों के लिए बनाया गया",
+    "title": "बिना कागज़ी की उलझन के अपना कोचिंग सेंटर चलाएं",
+    "subtitle": "विद्यार्थी और बैच प्रबंधित करें, फीस ट्रैक करें, उपस्थिति दर्ज करें, और WhatsApp पर सीधे फीस रिमाइंडर भेजें — हिंदी या अंग्रेज़ी में।",
+    "cta": "मुफ्त में शुरू करें",
+    "cta_secondary": "मेरा खाता पहले से ही है",
+    "feature_fees": "फीस रिमाइंडर",
+    "feature_fees_desc": "ड्यू डेट से पहले ऑटोमेटिक WhatsApp संदेश।",
+    "feature_attendance": "उपस्थिति",
+    "feature_attendance_desc": "पूरे बैच को कुछ ही टैप में प्रेजेंट मार्क करें।",
+    "feature_scores": "टेस्ट स्कोर",
+    "feature_scores_desc": "एक बार अंक डालें, तुरंत रिपोर्ट बनाएं।",
+    "feature_whatsapp": "WhatsApp वर्कफलो",
+    "feature_whatsapp_desc": "द्विभाषी टेम्पलेट जिन्हें अभिभावक सचमुच पड़ते हैं।"
+  },
+  "auth": {
+    "login_title": "वापसी पर स्वागत है",
+    "login_subtitle": "अपना कोचिंग सेंटर प्रबंधित करने के लिए लॉगिन करें।",
+    "signup_title": "अपना कोचिंग सेंटर सेटअप करें",
+    "signup_subtitle": "बस दो मिनट लगते हैं। क्रेडिट कार्ड की जरूरत नहीं।",
+    "institute_name": "संस्था का नाम",
+    "city": "शहर",
+    "admin_name": "आपका नाम",
+    "email": "ईमेल",
+    "password": "पासवर्ड",
+    "login_button": "लॉगिन",
+    "signup_button": "खाता बनाएं",
+    "no_account": "खाता नहीं है?",
+    "have_account": "पहले से खाता है?",
+    "sign_up_link": "साइन अप",
+    "login_link": "लॉगिन",
+    "forgot_password": "पासवर्ड भूल गए?"
+  },
+  "common": {
+    "save": "सेव करें",
+    "cancel": "रद्द करें",
+    "add": "जोड़ें",
+    "search": "खोजें",
+    "loading": "लोड हो रहा है…",
+    "actions": "कार्रवाई",
+    "edit": "संपादित करें",
+    "delete": "हटाएं",
+    "name": "नाम",
+    "phone": "फोन",
+    "status": "स्थिति",
+    "language": "भाषा"
+  }
+}
