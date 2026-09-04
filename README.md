@@ -20,6 +20,9 @@ Full docs live in [`docs/`](docs/):
 - [Operations](docs/OPERATIONS.md) — config, logging, scheduler, runbook
 - [Known issues](docs/KNOWN-ISSUES.md) — open defects, most severe first
 
+Contributing? Start with [CONTRIBUTING.md](CONTRIBUTING.md) — it covers the
+tenant-isolation rule, the lack of migrations, and how to verify a change.
+
 ## Stack
 
 - **Frontend**: React (Vite) + Tailwind CSS + react-i18next, talking to the

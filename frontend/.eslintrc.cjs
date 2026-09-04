@@ -14,4 +14,12 @@ module.exports = {
     "react/prop-types": "off",
     "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
   },
+  overrides: [
+    {
+      // Build-time config runs in Node, not the browser -- vite.config.js reads
+      // process.env for the dev proxy target.
+      files: ["*.config.js", "*.cjs"],
+      env: { node: true, browser: false },
+    },
+  ],
 };
