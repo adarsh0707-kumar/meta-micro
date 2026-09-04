@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.deps import get_current_user
+from app.core.tenancy import assert_students_in_batch
 from app.models.models import Batch, TestScore, User
 from app.schemas.schemas import TestScoreCreate, TestScoreOut
 
@@ -38,6 +39,7 @@ def create_test_score(
     batch = db.query(Batch).filter(Batch.id == payload.batch_id, Batch.institute_id == user.institute_id).first()
     if not batch:
         raise HTTPException(status_code=404, detail="Batch not found")
+    assert_students_in_batch(db, {payload.student_id}, payload.batch_id, user)
     score = TestScore(institute_id=user.institute_id, **payload.model_dump())
     db.add(score)
     db.commit()

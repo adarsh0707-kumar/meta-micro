@@ -3,7 +3,8 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.deps import require_admin
-from app.models.models import AutomationSetting, User
+from app.core.tenancy import get_owned
+from app.models.models import AutomationSetting, Template, User
 from app.schemas.schemas import AutomationOut, AutomationUpdate
 
 router = APIRouter(prefix="/api/automations", tags=["automations"])
@@ -16,6 +17,9 @@ def list_automations(admin: User = Depends(require_admin), db: Session = Depends
 
 @router.put("", response_model=AutomationOut)
 def upsert_automation(payload: AutomationUpdate, admin: User = Depends(require_admin), db: Session = Depends(get_db)):
+    if payload.template_id is not None:
+        get_owned(db, Template, payload.template_id, admin, detail="Template not found")
+
     setting = (
         db.query(AutomationSetting)
         .filter(

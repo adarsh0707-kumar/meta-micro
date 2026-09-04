@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -26,6 +26,18 @@ def setup_status(user: User = Depends(get_current_user), db: Session = Depends(g
 
 @router.post("/import-students", response_model=list[StudentOut])
 def import_students(students: list[StudentCreate], user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    requested_batches = {p.batch_id for p in students if p.batch_id}
+    if requested_batches:
+        owned = {
+            row[0]
+            for row in db.query(Batch.id).filter(
+                Batch.id.in_(requested_batches), Batch.institute_id == user.institute_id
+            )
+        }
+        unknown = requested_batches - owned
+        if unknown:
+            raise HTTPException(status_code=400, detail=f"Batches not found: {sorted(unknown)}")
+
     created = []
     for payload in students:
         student = Student(institute_id=user.institute_id, **payload.model_dump())

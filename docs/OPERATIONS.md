@@ -53,6 +53,7 @@ environment or `backend/.env`. Unknown keys are ignored (`extra="ignore"`).
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `APP_NAME` | `meta-micro` | Shown in the OpenAPI title and `/health` |
+| `LOG_LEVEL` | `INFO` | Root log level; see Logging below |
 | `DATABASE_URL` | local postgres URL | SQLAlchemy URL; Compose overrides it |
 | `JWT_SECRET` | `change-me-in-production` | HS256 signing key — **must** be changed before deploying |
 | `JWT_ALGORITHM` | `HS256` | |
@@ -83,15 +84,18 @@ by Meta and recorded as `failed`.
 
 ## 3. Logging
 
-There is no logging configuration file. The backend inherits uvicorn's default
-handlers writing to stdout, which Docker captures.
-
-Named loggers:
+[`main.py`](../backend/app/main.py) calls `logging.basicConfig` at import, at the
+level given by `LOG_LEVEL` (default `INFO`), writing to stdout where Docker
+captures it. That call is load-bearing: uvicorn configures only its own loggers
+(`uvicorn`, `uvicorn.access`, `uvicorn.error`) and leaves the root logger at
+WARNING with no handlers, so without it every `meta_micro.*` INFO line is
+silently dropped — which is exactly what happened before it was added, leaving
+the dev WhatsApp provider logging nothing at all.
 
 | Logger | Emits |
 | --- | --- |
-| `meta_micro.whatsapp` | INFO for every message the log provider "sends" (recipient + full body); WARNING when a Cloud API send fails |
-| `meta_micro.scheduler` | ERROR with traceback when an automation run raises |
+| `meta_micro.whatsapp` | INFO per message the log provider "sends" (recipient + full body); WARNING when a Cloud API send fails |
+| `meta_micro.scheduler` | ERROR + traceback when an automation run raises; ERROR when an automation names a template from another institute |
 
 Everything else is uvicorn's access and error logs.
 
@@ -101,15 +105,21 @@ docker compose logs backend | grep meta_micro     # app loggers only
 docker compose logs backend | grep scheduler      # automation failures
 ```
 
-Two things worth knowing:
+A send in development now looks like:
+
+```
+2026-09-04 17:02:37,598 INFO     meta_micro.whatsapp WhatsApp (dev/log provider) -> +919000000001: Namaste Suresh Kumar, ...
+```
+
+Two further things worth knowing:
 
 - The log provider writes **message bodies containing parent and student names
-  and phone numbers** at INFO. That is fine in development; if the log provider
-  is ever left on in an environment with real data, those logs hold personal
-  information.
-- A successful automation run logs nothing at all. Silence does not distinguish
-  "ran, nothing due" from "the scheduler never started". The `message_logs` table
-  is the reliable record of what happened.
+  and phone numbers** at INFO. Fine in development; if the log provider is ever
+  left on in an environment with real data, those logs hold personal information.
+  Set `LOG_LEVEL=WARNING` there.
+- A successful automation run logs nothing even at INFO. Silence does not
+  distinguish "ran, nothing due" from "the scheduler never started". The
+  `message_logs` table is the reliable record of what happened.
 
 ### Application-level audit trail
 
@@ -187,5 +197,6 @@ tenancy, or failure paths.
 - [ ] WhatsApp credentials set and verified by an end-to-end send
 - [ ] Backend running as exactly one replica
 - [ ] Backups scheduled
-- [ ] The tenancy defects in [KNOWN-ISSUES.md](KNOWN-ISSUES.md) fixed — they are
-      cross-institute data leaks
+- [ ] Remaining defects in [KNOWN-ISSUES.md](KNOWN-ISSUES.md) reviewed — the
+      cross-institute leaks are fixed, but #7 (deletes fail once messages exist)
+      will bite a live institute

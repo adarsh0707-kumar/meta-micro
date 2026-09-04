@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     app_name: str = "meta-micro"
+    log_level: str = "INFO"
     database_url: str = "postgresql+psycopg2://meta_micro:meta_micro@localhost:5432/meta_micro"
     jwt_secret: str = "change-me-in-production"
     jwt_algorithm: str = "HS256"
