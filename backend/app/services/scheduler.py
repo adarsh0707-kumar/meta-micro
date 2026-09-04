@@ -35,6 +35,16 @@ def run_due_automations() -> None:
             template = db.get(Template, setting.template_id)
             if not template:
                 continue
+            if template.institute_id != setting.institute_id:
+                # Should be unreachable -- the API validates ownership on write.
+                # Refuse rather than send one institute's message body to another's parents.
+                logger.error(
+                    "Automation %s references template %s from institute %s; skipping",
+                    setting.id,
+                    template.id,
+                    template.institute_id,
+                )
+                continue
 
             if setting.category.value == "fee_reminder":
                 fees = (

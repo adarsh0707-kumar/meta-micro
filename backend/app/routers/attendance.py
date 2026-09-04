@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.deps import get_current_user
+from app.core.tenancy import assert_students_in_batch
 from app.models.models import Attendance, Batch, User
 from app.schemas.schemas import AttendanceOut, AttendanceSubmit
 
@@ -34,11 +35,17 @@ def submit_attendance(payload: AttendanceSubmit, user: User = Depends(get_curren
     if not batch:
         raise HTTPException(status_code=404, detail="Batch not found")
 
+    assert_students_in_batch(db, {e.student_id for e in payload.entries}, payload.batch_id, user)
+
     results = []
     for entry in payload.entries:
         record = (
             db.query(Attendance)
-            .filter(Attendance.student_id == entry.student_id, Attendance.date == payload.date)
+            .filter(
+                Attendance.student_id == entry.student_id,
+                Attendance.date == payload.date,
+                Attendance.institute_id == user.institute_id,
+            )
             .first()
         )
         if record:

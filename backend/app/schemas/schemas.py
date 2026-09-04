@@ -1,6 +1,6 @@
 from datetime import date, datetime
 
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from app.models.models import AttendanceStatus, FeeStatus, Language, TemplateCategory, UserRole
 
@@ -226,7 +226,8 @@ class MessageLogOut(BaseModel):
 class AutomationUpdate(BaseModel):
     category: TemplateCategory
     enabled: bool
-    day_of_month: int = 1
+    # Capped at 28 so the trigger fires in every month, February included.
+    day_of_month: int = Field(default=1, ge=1, le=28)
     template_id: int | None = None
 
 

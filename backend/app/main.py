@@ -1,3 +1,4 @@
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -20,6 +21,14 @@ from app.routers import (
 from app.services.scheduler import start_scheduler
 
 settings = get_settings()
+
+# uvicorn configures only its own loggers and leaves the root logger at WARNING
+# with no handlers, which silently discards everything the app logs at INFO --
+# including every message the dev WhatsApp provider reports "sending".
+logging.basicConfig(
+    level=settings.log_level.upper(),
+    format="%(asctime)s %(levelname)-8s %(name)s %(message)s",
+)
 
 
 @asynccontextmanager

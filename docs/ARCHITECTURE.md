@@ -83,9 +83,12 @@ means dropping the volume or altering by hand. See KNOWN-ISSUES.
 directly; `Fee` reaches it through its student, so fee queries join `Student` and
 filter there.
 
-There is no database-level row policy and no shared query helper — isolation is
-enforced by each route adding `.filter(<Model>.institute_id == user.institute_id)`.
-That makes it easy to omit; two routes currently do. See KNOWN-ISSUES.
+There is no database-level row policy. Isolation is enforced by each route
+filtering on `institute_id`, which proved easy to omit — five routes accepted an
+id from the request body without checking it. Those are fixed, and the checks now
+live in [`core/tenancy.py`](../backend/app/core/tenancy.py): `get_owned` for a
+single row, `assert_students_in_batch` for bulk membership. Any new route that
+takes an id from the caller should use them rather than hand-writing the filter.
 
 ## 5. Authentication
 
@@ -182,5 +185,5 @@ React 18 + React Router 6 + Tailwind + react-i18next + axios.
 | JWT in `localStorage` | Simplest thing that works with a static frontend | Readable by any XSS on the origin; no server-side revocation |
 | `create_all` at startup | Zero migration setup for a young schema | No path to evolve a schema that holds real data |
 | In-process APScheduler | One less service to run | Cannot scale the backend past one replica |
-| Per-route tenancy filters | No ORM machinery to learn | Easy to forget — and it has been forgotten twice |
+| Per-route tenancy filters | No ORM machinery to learn | Easy to forget — it was missed on five routes; now centralised in `core/tenancy.py` |
 | Fee status stored, not derived | Simple queries | Nothing ever transitions a fee to `overdue` |

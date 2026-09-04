@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -63,7 +64,15 @@ def create_fee(payload: FeeCreate, user: User = Depends(get_current_user), db: S
         raise HTTPException(status_code=404, detail="Student not found")
     fee = Fee(**payload.model_dump())
     db.add(fee)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        # uq_fee_student_period -- one fee row per student per month.
+        db.rollback()
+        raise HTTPException(
+            status_code=409,
+            detail=f"A fee for {payload.period} already exists for this student",
+        )
     db.refresh(fee)
     return _to_out(fee)
 

@@ -86,8 +86,8 @@ Teachers in the institute, newest first.
 `StudentCreate`: `name` (required), `batch_id?`, `parent_name?`, `parent_phone?`,
 `phone?`, `admission_date?`, `monthly_fee?`.
 
-Note: `PUT` does not re-validate `batch_id` against the institute the way `POST`
-does (see KNOWN-ISSUES).
+Both `POST` and `PUT` reject a `batch_id` outside the caller's institute with
+400 `Batch not found`.
 
 ---
 
@@ -109,7 +109,7 @@ not a query to keep as the table grows.
 ### `POST /fees` → 201
 `{ "student_id", "period": "YYYY-MM", "amount_due", "due_date"? }`. 404 if the
 student is outside the institute. A duplicate (student, period) violates
-`uq_fee_student_period` and surfaces as a 500 (see KNOWN-ISSUES).
+`uq_fee_student_period` and returns 409 with the conflicting period named.
 
 ### `POST /fees/{fee_id}/mark-paid`
 `{ "amount_paid" }` → the updated `FeeOut`. Sets `paid_at` to now and `status` to
@@ -219,9 +219,9 @@ Upsert by (institute, category):
 { "category": "fee_reminder", "enabled": true, "day_of_month": 5, "template_id": 3 }
 ```
 
-`day_of_month` defaults to 1 and is not range-checked. `template_id` may be null,
-in which case the scheduler skips the automation. The template is not validated
-as belonging to the institute (see KNOWN-ISSUES).
+`day_of_month` defaults to 1 and must be 1-28, so the trigger exists in every
+month; anything else is a 422. `template_id` may be null, in which case the
+scheduler skips the automation; a template outside the institute is a 404.
 
 ---
 
@@ -237,5 +237,6 @@ Drives the onboarding checklist:
 
 ### `POST /setup/import-students`
 A JSON array of `StudentCreate` objects, created in one transaction under the
-caller's institute. Returns the created students. `batch_id` values are not
-validated against the institute (see KNOWN-ISSUES).
+caller's institute. Returns the created students. Every `batch_id` in the payload
+must belong to the institute, or the whole import fails with 400 listing the
+unknown ids.
