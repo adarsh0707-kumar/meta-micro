@@ -106,6 +106,9 @@
     "send_test": "Send test message",
     "test_ok": "Test message sent.",
     "test_failed": "Test send failed.",
-    "sent_to": "Sent to"
+    "sent_to": "Sent to",
+    "test_recorded": "Recorded — not delivered.",
+    "test_recorded_hint": "WhatsApp credentials are not set, so nothing left the server. Set WHATSAPP_PROVIDER, WHATSAPP_PHONE_NUMBER_ID and WHATSAPP_ACCESS_TOKEN in backend/.env, restart, then test again.",
+    "would_go_to": "Would have gone to"
   }
 }

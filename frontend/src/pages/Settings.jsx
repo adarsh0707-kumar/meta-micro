@@ -229,12 +229,22 @@ export default function Settings() {
                 <p className="font-semibold text-primary">{testResult.text}</p>
               ) : (
                 <>
+                  {/* "Sent" must mean a phone actually rang. With the log
+                      provider nothing leaves the server, so say so plainly. */}
                   <p className="font-semibold">
-                    {testResult.ok ? t("settings.test_ok") : t("settings.test_failed")}
+                    {!testResult.ok
+                      ? t("settings.test_failed")
+                      : testResult.data.would_really_send
+                        ? t("settings.test_ok")
+                        : t("settings.test_recorded")}
                   </p>
                   <p className="mt-1 text-ink/60">
-                    {t("settings.sent_to")}: {testResult.data.to_phone}
+                    {testResult.data.would_really_send ? t("settings.sent_to") : t("settings.would_go_to")}:{" "}
+                    {testResult.data.to_phone}
                   </p>
+                  {!testResult.data.would_really_send && (
+                    <p className="mt-2 text-ink/70">{t("settings.test_recorded_hint")}</p>
+                  )}
                   <p className="mt-1 break-all text-ink/50">{testResult.data.provider_response}</p>
                 </>
               )}

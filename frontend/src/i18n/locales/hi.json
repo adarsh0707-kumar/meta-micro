@@ -106,6 +106,9 @@
     "send_test": "टेस्ट संदेश भेजें",
     "test_ok": "टेस्ट संदेश भेजा गया।",
     "test_failed": "टेस्ट भेजना विफल।",
-    "sent_to": "भेजा गया"
+    "sent_to": "भेजा गया",
+    "test_recorded": "दर्ज हुआ — भेजा नहीं गया।",
+    "test_recorded_hint": "व्हाट्सएप क्रेडेंशियल सेट नहीं हैं, इसलिए कुछ भी सर्वर से बाहर नहीं गया। backend/.env में WHATSAPP_PROVIDER, WHATSAPP_PHONE_NUMBER_ID और WHATSAPP_ACCESS_TOKEN सेट करें, रीस्टार्ट करें, फिर दोबारा टेस्ट करें।",
+    "would_go_to": "जाता"
   }
 }

@@ -1,5 +1,8 @@
 module.exports = {
   root: true,
+  // dist/ holds the minified build output; node_modules is third-party code.
+  // Linting either reports hundreds of errors that are not ours to fix.
+  ignorePatterns: ["dist", "node_modules"],
   env: { browser: true, es2021: true },
   extends: [
     "eslint:recommended",

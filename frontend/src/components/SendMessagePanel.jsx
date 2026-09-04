@@ -72,7 +72,11 @@ export default function SendMessagePanel({ category, sendFn, title }) {
         student_ids: selected,
         confirm: true,
       });
-      setResult(`Sent to ${data.length} recipient(s).`);
+      setResult(
+        provider?.would_really_send
+          ? `Sent to ${data.length} recipient(s).`
+          : `Recorded ${data.length} message(s) — not delivered, WhatsApp is not configured.`
+      );
       setPreview(null);
       setSelected([]);
       load();
