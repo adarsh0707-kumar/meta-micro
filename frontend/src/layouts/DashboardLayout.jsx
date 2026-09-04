@@ -16,6 +16,8 @@ const NAV_ITEMS = [
   { to: "/app/parent-updates", key: "parent_updates", icon: "👪" },
   { to: "/app/automations", key: "automations", icon: "⚙️" },
   { to: "/app/setup", key: "setup", icon: "🚀" },
+  { to: "/app/staff", key: "staff", icon: "🧑\u200d🏫", adminOnly: true },
+  { to: "/app/settings", key: "settings", icon: "⚙️" },
 ];
 
 export default function DashboardLayout() {
@@ -45,7 +47,7 @@ export default function DashboardLayout() {
         <p className="mb-4 truncate text-sm text-ink/60">{institute?.name}</p>
 
         <nav className="space-y-1">
-          {NAV_ITEMS.map((item) => (
+          {NAV_ITEMS.filter((item) => !item.adminOnly || user?.role === "admin").map((item) => (
             <NavLink
               key={item.to}
               to={item.to}

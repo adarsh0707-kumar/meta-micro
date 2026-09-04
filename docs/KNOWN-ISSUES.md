@@ -22,6 +22,7 @@ the owning institute still succeed, and `smoke_test.py` passes.
 | 6 | Duplicate fee period returned 500 | `IntegrityError` caught, rolled back, reported as 409 | 409 `A fee for 2026-09 already exists for this student` |
 | 9 | Application INFO logs never reached stdout | `logging.basicConfig` at startup, level from the new `LOG_LEVEL` setting | the log provider's message line now appears in `docker compose logs` |
 | 13 | `day_of_month` was unvalidated | `Field(ge=1, le=28)` | 422 on `31` |
+| 18 | WhatsApp fell back to logging when `meta_cloud_api` was selected but unconfigured, reporting `sent` while delivering nothing | `get_whatsapp_provider()` now raises `WhatsAppConfigError`; the API returns 503 and the scheduler logs and skips | 503 `WhatsApp is not configured: missing WHATSAPP_ACCESS_TOKEN…` |
 
 The tenancy fixes live in [`core/tenancy.py`](../backend/app/core/tenancy.py) —
 `get_owned` for single rows and `assert_students_in_batch` for bulk membership.
@@ -54,13 +55,13 @@ unless a row is inserted that way. Either add a daily sweep alongside the
 existing scheduler job, or derive status from `due_date` at read time and drop
 the stored column.
 
-#### 10. Teacher and admin are barely distinguishable
+#### 10. Teachers can still send broadcasts and edit fees
 
-Only automations and teacher invites use `require_admin`. A teacher can create
-and delete students, create fee records, mark fees paid, edit templates, and send
-WhatsApp broadcasts to every parent. If the role is meant to be a boundary, the
-fee and messaging routes need `require_admin` too. Left alone because narrowing
-it is a product decision, not a bug fix.
+Staff management, institute settings, and WhatsApp test sends are now
+`require_admin`, but a teacher can still create and delete students, create fee
+records, mark fees paid, edit templates, and send a WhatsApp broadcast to every
+parent. Whether that is wrong depends on how these institutes actually divide
+work — narrowing it is a product decision, so it is left as is.
 
 #### 11. Default `JWT_SECRET` ships in `.env.example`
 
@@ -99,12 +100,7 @@ not fine at 3,000.
 The in-process scheduler means a second backend replica double-sends every
 automated message. Nothing in `docker-compose.yml` prevents scaling.
 
-#### 18. Silent fallback to the log provider
 
-`get_whatsapp_provider()` returns the logging provider whenever the access token
-is blank, even with `WHATSAPP_PROVIDER=meta_cloud_api`. Message logs read `sent`
-and nothing is delivered. A misconfigured production deploy should fail loudly.
-At least it is now visible in the logs, since #9 is fixed.
 
 ### Low
 

@@ -185,21 +185,58 @@ Unrecognised tokens are left in the message as written.
 
 ## Messaging — `/api/messaging`
 
+Sending is deliberately two steps: **preview, then confirm**. A broadcast reaches
+real parents and cannot be unsent.
+
+### `GET /messaging/provider-status`
+Whether a send would actually reach a phone.
+
+```json
+{ "provider": "log", "configured": false, "would_really_send": false,
+  "detail": "Development log provider: messages are recorded, never delivered." }
+```
+
+### `POST /messaging/preview`
+Same body as a send. Renders every message and reports who would be skipped,
+without sending anything.
+
+```json
+{ "template_name": "Fee Reminder Hindi", "total_selected": 3,
+  "deliverable_count": 2, "skipped_count": 1, "provider": "log",
+  "would_really_send": false,
+  "rows": [ { "student_id": 5, "student_name": "No Phone", "recipient_phone": null,
+              "body": "…", "deliverable": false, "reason": "No phone number" } ] }
+```
+
 ### `POST /messaging/fee-reminders` and `POST /messaging/parent-updates`
 Identical handlers; they differ only in intent, and the category recorded comes
 from the **template**, not the path.
 
 ```json
-{ "template_id": 3, "student_ids": [7, 8, 9] }
+{ "template_id": 3, "student_ids": [7, 8, 9], "confirm": true }
 ```
 
-For each student in the institute: resolve `parent_phone or phone` (skip if
-neither), render the template, send through the configured provider, and write a
-`message_logs` row. Returns the created logs. 404 unknown template, 400 if no
-requested student matched the institute.
+`confirm` defaults to false and a send without it is a **400** — preview first.
+`student_ids` must hold 1–500 entries; more is a 422, so one mistake cannot
+message a roster thousands of times.
+
+For each student in the institute: normalise `parent_phone or phone` to digits
+with a country code, skip anyone without a usable number or who is inactive,
+render the template, send, and write a `message_logs` row. Returns the created
+logs. 404 unknown template, 400 if no requested student matched the institute or
+none had a usable number, **503 if WhatsApp is selected but not configured**.
 
 A provider failure does not fail the request — the log row records
 `status: "failed"` with the error in `provider_response`.
+
+### `POST /messaging/test-send` · **admin**
+Sends one message to a single number the admin names, unrelated to the student
+roster. Use it to verify credentials against your own phone before pointing a
+broadcast at parents.
+
+```json
+{ "to_phone": "+91 90000 00000", "body": "optional custom text" }
+```
 
 ### `GET /messaging/logs`
 The 200 most recent logs for the institute, newest first. Not filterable by
@@ -222,6 +259,40 @@ Upsert by (institute, category):
 `day_of_month` defaults to 1 and must be 1-28, so the trigger exists in every
 month; anything else is a 422. `template_id` may be null, in which case the
 scheduler skips the automation; a template outside the institute is a 404.
+
+---
+
+## Staff — `/api/staff` · **admin**
+
+Manages every account in the institute, admins included. Supersedes
+`/auth/teachers` and `/auth/teachers/invite`, which only ever handled teachers
+and remain for compatibility.
+
+| Method | Path | Notes |
+| --- | --- | --- |
+| `GET` | `` | everyone in the institute, admins first |
+| `POST` | `` | 201. `{name, email, phone?, temp_password, role}`; password min 8 chars. 400 on duplicate email |
+| `PUT` | `/{user_id}` | edit name, email, phone |
+| `PUT` | `/{user_id}/role` | `{role}` — `admin` or `teacher` |
+| `PUT` | `/{user_id}/active` | `{is_active}` — deactivating blocks login immediately |
+| `POST` | `/{user_id}/reset-password` | `{new_password}`; re-flags the account as `invited` |
+| `DELETE` | `/{user_id}` | 204 |
+
+**The last-admin guard.** Demoting, deactivating, or deleting the only active
+admin is a 400 — there is no password reset flow and no support console, so an
+institute with no active admin could never be administered again. Deleting your
+own account is likewise refused.
+
+---
+
+## Institute and profile
+
+| Method | Path | Auth | Notes |
+| --- | --- | --- | --- |
+| `GET` | `/api/institute` | any | the caller's institute |
+| `PUT` | `/api/institute` | **admin** | `{name, city, default_language}` — previously fixed at signup forever |
+| `PUT` | `/api/profile` | any | the caller's own `{name, phone}` |
+| `POST` | `/api/profile/password` | any | `{current_password, new_password}`; 204, or 400 if the current password is wrong. Clears the `invited` flag |
 
 ---
 

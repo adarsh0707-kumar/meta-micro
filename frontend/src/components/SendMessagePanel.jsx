@@ -12,6 +12,8 @@ export default function SendMessagePanel({ category, sendFn, title }) {
   const [logs, setLogs] = useState([]);
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState(null);
+  const [preview, setPreview] = useState(null);
+  const [provider, setProvider] = useState(null);
 
   const load = async () => {
     const [templatesRes, studentsRes, logsRes] = await Promise.all([
@@ -26,7 +28,13 @@ export default function SendMessagePanel({ category, sendFn, title }) {
 
   useEffect(() => {
     load();
+    messagingApi.providerStatus().then(({ data }) => setProvider(data));
   }, []);
+
+  // Any change to the template or recipients invalidates a rendered preview.
+  useEffect(() => {
+    setPreview(null);
+  }, [templateId, selected]);
 
   const toggle = (id) => {
     setSelected((prev) => (prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]));
@@ -36,13 +44,36 @@ export default function SendMessagePanel({ category, sendFn, title }) {
     setSelected((prev) => (prev.length === students.length ? [] : students.map((s) => s.id)));
   };
 
-  const handleSend = async () => {
+  // Sending is two steps on purpose: a broadcast reaches real parents, and
+  // there is no way to unsend one. Preview renders every message first.
+  const handlePreview = async () => {
     if (!templateId || selected.length === 0) return;
     setSending(true);
     setResult(null);
     try {
-      const { data } = await sendFn({ template_id: Number(templateId), student_ids: selected });
+      const { data } = await messagingApi.preview({
+        template_id: Number(templateId),
+        student_ids: selected,
+      });
+      setPreview(data);
+    } catch (err) {
+      setResult(err.response?.data?.detail || "Could not build a preview.");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleConfirmedSend = async () => {
+    setSending(true);
+    setResult(null);
+    try {
+      const { data } = await sendFn({
+        template_id: Number(templateId),
+        student_ids: selected,
+        confirm: true,
+      });
       setResult(`Sent to ${data.length} recipient(s).`);
+      setPreview(null);
       setSelected([]);
       load();
     } catch (err) {
@@ -54,7 +85,13 @@ export default function SendMessagePanel({ category, sendFn, title }) {
 
   return (
     <div>
-      <h1 className="mb-6 text-h2">{title}</h1>
+      <h1 className="mb-2 text-h2">{title}</h1>
+      {provider && !provider.would_really_send && (
+        <p className="mb-6 rounded-2xl bg-muted/60 px-4 py-3 text-sm text-ink/70">
+          WhatsApp is not configured — messages are recorded but not delivered. An admin can
+          set this up on the Settings page.
+        </p>
+      )}
 
       <div className="card mb-6">
         <label className="label">Template</label>
@@ -88,13 +125,58 @@ export default function SendMessagePanel({ category, sendFn, title }) {
         <button
           type="button"
           disabled={!templateId || selected.length === 0 || sending}
-          onClick={handleSend}
+          onClick={handlePreview}
           className="btn-primary mt-4"
         >
-          {sending ? t("common.loading") : `Send to ${selected.length} recipient(s)`}
+          {sending ? t("common.loading") : `Preview ${selected.length} message(s)`}
         </button>
         {result && <p className="mt-3 font-semibold text-primary">{result}</p>}
       </div>
+
+      {preview && (
+        <div className="card mb-6 border-2 border-accent">
+          <h2 className="mb-1 text-h4">Confirm before sending</h2>
+          <p className="mb-4 text-sm text-ink/70">
+            {preview.deliverable_count} of {preview.total_selected} will be delivered
+            {preview.skipped_count > 0 && `, ${preview.skipped_count} skipped`}.{" "}
+            {preview.would_really_send ? (
+              <strong>These are real WhatsApp messages to parents.</strong>
+            ) : (
+              <>WhatsApp is not configured, so these will be recorded but not delivered.</>
+            )}
+          </p>
+
+          <div className="mb-4 max-h-72 overflow-y-auto rounded-2xl border-2 border-ink/10">
+            {preview.rows.map((row) => (
+              <div key={row.student_id} className="border-b border-ink/5 px-4 py-3 last:border-0">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="font-medium">{row.student_name}</span>
+                  <span className={`text-sm ${row.deliverable ? "text-ink/50" : "font-semibold text-primary"}`}>
+                    {row.deliverable ? row.recipient_phone : row.reason}
+                  </span>
+                </div>
+                <p className={`mt-1 text-sm ${row.deliverable ? "text-ink/70" : "text-ink/30 line-through"}`}>
+                  {row.body}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <button
+              type="button"
+              className="btn-primary"
+              disabled={sending || preview.deliverable_count === 0}
+              onClick={handleConfirmedSend}
+            >
+              {sending ? t("common.loading") : `Confirm and send to ${preview.deliverable_count}`}
+            </button>
+            <button type="button" className="btn-secondary" onClick={() => setPreview(null)}>
+              {t("common.cancel")}
+            </button>
+          </div>
+        </div>
+      )}
 
       <h2 className="mb-3 text-h4">Recent messages</h2>
       <div className="card overflow-x-auto p-0">

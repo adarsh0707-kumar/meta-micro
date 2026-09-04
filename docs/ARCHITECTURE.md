@@ -121,10 +121,22 @@ Two implementations:
   HTTP errors are caught, logged at WARNING, and returned as a failure rather
   than raised, so one bad number cannot abort a broadcast.
 
-`get_whatsapp_provider()` picks per call: the Cloud API provider only when
-`WHATSAPP_PROVIDER=meta_cloud_api` *and* an access token is set — otherwise the
-log provider. A misconfigured production deploy therefore degrades to logging
-rather than erroring.
+`get_whatsapp_provider()` picks per call. With `WHATSAPP_PROVIDER=meta_cloud_api`
+it returns the Cloud API provider, or raises `WhatsAppConfigError` when the token
+or phone-number id is missing — it does **not** fall back to logging, because a
+reminder that was never sent must not look like one that was. The API turns that
+into a 503; the scheduler logs it and skips the run. `provider_status()` exposes
+the same judgement to the UI so a send screen can say plainly whether messages
+will reach a phone.
+
+Outbound numbers pass through `normalise_phone`, which strips punctuation and
+adds a country code (`090000-00001` and `+91 90000 00001` both become
+`919000000001`). Anything that cannot be made into 10–15 digits is treated as
+undeliverable rather than sent into the void.
+
+Sending itself is two-step: `POST /messaging/preview` renders every message and
+flags who would be skipped, and the send endpoints refuse a payload without
+`confirm: true`. Recipients are capped at 500 per call.
 
 `render_template(body, context)` does plain `{key}` → value string replacement.
 Available placeholders: `student_name`, `parent_name`, `monthly_fee`,

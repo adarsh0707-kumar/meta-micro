@@ -4,6 +4,10 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from app.models.models import AttendanceStatus, FeeStatus, Language, TemplateCategory, UserRole
 
+# A single broadcast is capped so a mistake cannot message the whole roster
+# thousands of times over. Raise deliberately if an institute outgrows it.
+MAX_RECIPIENTS_PER_SEND = 500
+
 
 # ---------- Auth / Institute / User ----------
 class InstituteSignup(BaseModel):
@@ -54,6 +58,54 @@ class UserInvite(BaseModel):
 class MeOut(BaseModel):
     user: UserOut
     institute: InstituteOut
+
+
+# ---------- Staff administration (admin only) ----------
+class StaffCreate(BaseModel):
+    name: str
+    email: EmailStr
+    phone: str | None = None
+    temp_password: str = Field(min_length=8)
+    role: UserRole = UserRole.teacher
+
+
+class StaffUpdate(BaseModel):
+    """Editable fields on a staff member. Role and active state have their own
+    endpoints because both need a last-admin guard."""
+
+    name: str
+    email: EmailStr
+    phone: str | None = None
+
+
+class StaffRoleUpdate(BaseModel):
+    role: UserRole
+
+
+class StaffActiveUpdate(BaseModel):
+    is_active: bool
+
+
+class StaffPasswordReset(BaseModel):
+    new_password: str = Field(min_length=8)
+
+
+# ---------- Own profile ----------
+class ProfileUpdate(BaseModel):
+    name: str
+    phone: str | None = None
+
+
+class PasswordChange(BaseModel):
+    current_password: str
+    new_password: str = Field(min_length=8)
+
+
+# ---------- Institute settings ----------
+class InstituteUpdate(BaseModel):
+    name: str
+    city: str = "Patna"
+    default_language: Language
 
 
 # ---------- Batch ----------
@@ -208,7 +260,44 @@ class TemplateOut(BaseModel):
 # ---------- Messaging ----------
 class SendMessageRequest(BaseModel):
     template_id: int
-    student_ids: list[int]
+    student_ids: list[int] = Field(min_length=1, max_length=MAX_RECIPIENTS_PER_SEND)
+    # A broadcast reaches real parents, so the caller must say so explicitly.
+    # Preview the same payload with confirm=false to see what would be sent.
+    confirm: bool = False
+
+
+class MessagePreviewRow(BaseModel):
+    student_id: int
+    student_name: str
+    recipient_phone: str | None
+    body: str
+    deliverable: bool
+    reason: str | None = None
+
+
+class MessagePreviewOut(BaseModel):
+    template_name: str
+    total_selected: int
+    deliverable_count: int
+    skipped_count: int
+    provider: str
+    would_really_send: bool
+    rows: list[MessagePreviewRow]
+
+
+class ProviderStatusOut(BaseModel):
+    provider: str
+    configured: bool
+    would_really_send: bool
+    detail: str
+
+
+class TestSendRequest(BaseModel):
+    """Sends one fixed message to a single number, to prove credentials work
+    without touching the student roster."""
+
+    to_phone: str
+    body: str = "meta-micro test message. WhatsApp is configured correctly."
 
 
 class MessageLogOut(BaseModel):

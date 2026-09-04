@@ -11,8 +11,10 @@ import Fees from "./pages/Fees";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import ParentUpdates from "./pages/ParentUpdates";
+import Settings from "./pages/Settings";
 import Setup from "./pages/Setup";
 import SignUp from "./pages/SignUp";
+import Staff from "./pages/Staff";
 import StudentDetails from "./pages/StudentDetails";
 import Students from "./pages/Students";
 import Templates from "./pages/Templates";
@@ -46,6 +48,8 @@ export default function App() {
         <Route path="parent-updates" element={<ParentUpdates />} />
         <Route path="automations" element={<Automations />} />
         <Route path="setup" element={<Setup />} />
+        <Route path="staff" element={<Staff />} />
+        <Route path="settings" element={<Settings />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

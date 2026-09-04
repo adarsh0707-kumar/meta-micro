@@ -6,7 +6,12 @@ from sqlalchemy.orm import Session
 
 from app.core.database import SessionLocal
 from app.models.models import AutomationSetting, Fee, FeeStatus, MessageLog, Student, Template
-from app.services.whatsapp import get_whatsapp_provider, render_template
+from app.services.whatsapp import (
+    WhatsAppConfigError,
+    get_whatsapp_provider,
+    normalise_phone,
+    render_template,
+)
 
 logger = logging.getLogger("meta_micro.scheduler")
 
@@ -28,7 +33,17 @@ def run_due_automations() -> None:
         if not settings_due:
             return
 
-        provider = get_whatsapp_provider()
+        try:
+            provider = get_whatsapp_provider()
+        except WhatsAppConfigError as exc:
+            logger.error(
+                "Skipping %d due automation(s): WhatsApp is not configured -- %s",
+                len(settings_due),
+                exc,
+            )
+            return
+
+        logger.info("Running %d due automation(s)", len(settings_due))
         for setting in settings_due:
             if not setting.template_id:
                 continue
@@ -63,7 +78,7 @@ def run_due_automations() -> None:
                 targets = [(s, {}) for s in students]
 
             for student, extra_context in targets:
-                recipient_phone = student.parent_phone or student.phone
+                recipient_phone = normalise_phone(student.parent_phone or student.phone)
                 if not recipient_phone:
                     continue
                 context = {

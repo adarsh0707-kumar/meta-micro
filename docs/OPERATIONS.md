@@ -68,19 +68,48 @@ Settings are cached with `@lru_cache`, so a change requires a process restart.
 
 ### Going live with WhatsApp
 
-1. Set `WHATSAPP_PROVIDER=meta_cloud_api`.
-2. Set `WHATSAPP_PHONE_NUMBER_ID` and `WHATSAPP_ACCESS_TOKEN`.
-3. Restart the backend and send one message to a known number; confirm the
-   `message_logs` row has `status: sent` and a JSON `provider_response`.
+You need a Meta WhatsApp Business Platform account, a registered phone number,
+and a token. Then:
 
-If the token is blank the app silently falls back to the log provider — messages
-appear to succeed but nothing is delivered. Step 3 is the only way to be sure.
+1. Set `WHATSAPP_PROVIDER=meta_cloud_api` in `backend/.env`.
+2. Set `WHATSAPP_PHONE_NUMBER_ID` and `WHATSAPP_ACCESS_TOKEN` from the Meta app
+   dashboard. Never commit these — `.env` is gitignored for this reason.
+3. Restart the backend: `docker compose up -d backend`.
+4. Check the app agrees it is configured:
 
-Meta's Cloud API only accepts free-form text within a 24-hour customer service
-window; outside it, sends require a pre-approved message template registered with
-Meta. `MetaCloudApiProvider` sends `type: "text"` only, so first-contact
-reminders to a parent who has not messaged the business number will be rejected
-by Meta and recorded as `failed`.
+   ```bash
+   curl -s localhost:8000/api/messaging/provider-status -H "Authorization: Bearer <token>"
+   # -> "would_really_send": true
+   ```
+
+5. Send one test to **your own phone**, from Settings → WhatsApp in the UI, or:
+
+   ```bash
+   curl -s -X POST localhost:8000/api/messaging/test-send \
+     -H "Authorization: Bearer <admin token>" -H 'Content-Type: application/json' \
+     -d '{"to_phone": "+91 90000 00000"}'
+   ```
+
+   This does not touch the student roster. Only after it arrives should you point
+   a broadcast at parents.
+
+If a required value is missing the app now **refuses** to send — the API returns
+503 and the scheduler logs an error and skips the run. It no longer falls back to
+logging, because a reminder that was never delivered must not be recorded as
+`sent`.
+
+### Meta's 24-hour window
+
+Meta's Cloud API only accepts free-form text within 24 hours of the recipient's
+last message to your business number. Outside that window a send needs a
+**pre-approved message template** registered with Meta, and
+`MetaCloudApiProvider` sends `type: "text"` only. So a first-contact fee reminder
+to a parent who has never messaged the institute will be rejected by Meta and
+recorded as `failed` with the reason in `provider_response`.
+
+This is the single most likely reason a correctly configured deploy still does
+not deliver. Registering Meta-side templates and sending `type: "template"` is
+the fix, and is not yet built.
 
 ## 3. Logging
 

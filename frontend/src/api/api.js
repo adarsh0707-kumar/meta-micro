@@ -50,9 +50,29 @@ export const templatesApi = {
 };
 
 export const messagingApi = {
+  providerStatus: () => client.get("/messaging/provider-status"),
+  preview: (payload) => client.post("/messaging/preview", payload),
   sendFeeReminders: (payload) => client.post("/messaging/fee-reminders", payload),
   sendParentUpdates: (payload) => client.post("/messaging/parent-updates", payload),
+  testSend: (payload) => client.post("/messaging/test-send", payload),
   logs: () => client.get("/messaging/logs"),
+};
+
+export const staffApi = {
+  list: () => client.get("/staff"),
+  create: (payload) => client.post("/staff", payload),
+  update: (id, payload) => client.put(`/staff/${id}`, payload),
+  setRole: (id, role) => client.put(`/staff/${id}/role`, { role }),
+  setActive: (id, isActive) => client.put(`/staff/${id}/active`, { is_active: isActive }),
+  resetPassword: (id, newPassword) => client.post(`/staff/${id}/reset-password`, { new_password: newPassword }),
+  remove: (id) => client.delete(`/staff/${id}`),
+};
+
+export const instituteApi = {
+  get: () => client.get("/institute"),
+  update: (payload) => client.put("/institute", payload),
+  updateProfile: (payload) => client.put("/profile", payload),
+  changePassword: (payload) => client.post("/profile/password", payload),
 };
 
 export const automationsApi = {

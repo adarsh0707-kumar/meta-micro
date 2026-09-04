@@ -11,7 +11,9 @@
     "parent_updates": "Parent Updates",
     "automations": "Automations",
     "setup": "Setup",
-    "logout": "Log out"
+    "logout": "Log out",
+    "staff": "Staff",
+    "settings": "Settings"
   },
   "landing": {
     "eyebrow": "Built for coaching centres in Patna",
@@ -59,5 +61,51 @@
     "phone": "Phone",
     "status": "Status",
     "language": "Language"
+  },
+  "staff": {
+    "add": "Add staff",
+    "edit_title": "Edit staff member",
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "role": "Role",
+    "admin": "Admin",
+    "teacher": "Teacher",
+    "active": "Active",
+    "inactive": "Inactive",
+    "actions": "Actions",
+    "you": "you",
+    "deactivate": "Deactivate",
+    "reactivate": "Reactivate",
+    "reset_password": "Reset password",
+    "temp_password": "Temporary password",
+    "temp_password_hint": "Give this to them directly — it is not emailed.",
+    "last_admin_hint": "The institute must keep at least one active admin.",
+    "empty": "No staff yet."
+  },
+  "settings": {
+    "institute": "Institute",
+    "institute_desc": "Name, city, and the language the app opens in.",
+    "institute_name": "Institute name",
+    "city": "City",
+    "default_language": "Default language",
+    "profile": "Your profile",
+    "profile_desc": "How your name appears to the rest of the institute.",
+    "password": "Change password",
+    "current_password": "Current password",
+    "new_password": "New password",
+    "change_password": "Change password",
+    "password_changed": "Password changed.",
+    "saved": "Saved.",
+    "whatsapp": "WhatsApp",
+    "whatsapp_desc": "Check whether messages actually reach parents.",
+    "wa_live": "Live — messages are delivered to parents.",
+    "wa_not_live": "Not live — messages are recorded but not delivered.",
+    "test_number": "Send a test to",
+    "test_hint": "Use your own number. This does not touch the student roster.",
+    "send_test": "Send test message",
+    "test_ok": "Test message sent.",
+    "test_failed": "Test send failed.",
+    "sent_to": "Sent to"
   }
 }

@@ -100,14 +100,79 @@ r = client.post(
 print(r.status_code, r.json())
 assert r.status_code == 200
 
-print("== send fee reminder (log provider) ==")
+print("== provider status ==")
+r = client.get("/api/messaging/provider-status", headers=headers)
+print(r.status_code, r.json())
+assert r.status_code == 200
+assert r.json()["would_really_send"] is False  # log provider in tests
+
+print("== preview fee reminder (sends nothing) ==")
+r = client.post(
+    "/api/messaging/preview",
+    headers=headers,
+    json={"template_id": template_id, "student_ids": [student_id]},
+)
+print(r.status_code, r.json())
+assert r.status_code == 200
+assert r.json()["deliverable_count"] == 1
+
+print("== send without confirm is refused ==")
 r = client.post(
     "/api/messaging/fee-reminders",
     headers=headers,
     json={"template_id": template_id, "student_ids": [student_id]},
 )
 print(r.status_code, r.json())
+assert r.status_code == 400
+
+print("== send fee reminder (log provider) ==")
+r = client.post(
+    "/api/messaging/fee-reminders",
+    headers=headers,
+    json={"template_id": template_id, "student_ids": [student_id], "confirm": True},
+)
+print(r.status_code, r.json())
 assert r.status_code == 200
 assert r.json()[0]["status"] == "sent"
+
+print("== staff: create, edit, and the last-admin guard ==")
+r = client.post(
+    "/api/staff",
+    headers=headers,
+    json={"name": "Priya Singh", "email": "priya@example.in", "temp_password": "temppass123", "role": "teacher"},
+)
+print(r.status_code, r.json())
+assert r.status_code == 201
+staff_id = r.json()["id"]
+
+r = client.put(
+    f"/api/staff/{staff_id}",
+    headers=headers,
+    json={"name": "Priya Sharma", "email": "priya@example.in", "phone": "+919000000009"},
+)
+print(r.status_code, r.json())
+assert r.status_code == 200 and r.json()["name"] == "Priya Sharma"
+
+# The signup admin is the only active admin, so demoting them must be refused.
+r = client.put("/api/staff/1/role", headers=headers, json={"role": "teacher"})
+print(r.status_code, r.json())
+assert r.status_code == 400
+
+print("== institute settings and profile ==")
+r = client.put(
+    "/api/institute",
+    headers=headers,
+    json={"name": "Bright Future Coaching Centre", "city": "Patna", "default_language": "en"},
+)
+print(r.status_code, r.json())
+assert r.status_code == 200
+
+r = client.post(
+    "/api/profile/password",
+    headers=headers,
+    json={"current_password": "wrong-password", "new_password": "brandnew12345"},
+)
+print(r.status_code, r.json())
+assert r.status_code == 400  # wrong current password is refused
 
 print("\nALL SMOKE TESTS PASSED")

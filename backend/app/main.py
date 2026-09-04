@@ -12,8 +12,10 @@ from app.routers import (
     automations,
     batches,
     fees,
+    institute,
     messaging,
     setup,
+    staff,
     students,
     templates,
     test_scores,
@@ -59,6 +61,8 @@ app.include_router(templates.router)
 app.include_router(messaging.router)
 app.include_router(automations.router)
 app.include_router(setup.router)
+app.include_router(staff.router)
+app.include_router(institute.router)
 
 
 @app.get("/api/health")
