@@ -9,6 +9,17 @@ Built from the project's System Requirements Document — see `2a. Product
 Interpretation`, `3. Functional Requirements`, and `6. Visuals Colors and
 Theme` for the source spec this implementation follows.
 
+## Documentation
+
+Full docs live in [`docs/`](docs/):
+
+- [PRD](docs/PRD.md) — users, scope, flows, success measures
+- [Architecture](docs/ARCHITECTURE.md) — system shape, request path, decisions
+- [Data model](docs/DATA-MODEL.md) — tables, constraints, enums
+- [API reference](docs/API.md) — every endpoint
+- [Operations](docs/OPERATIONS.md) — config, logging, scheduler, runbook
+- [Known issues](docs/KNOWN-ISSUES.md) — open defects, most severe first
+
 ## Stack
 
 - **Frontend**: React (Vite) + Tailwind CSS + react-i18next, talking to the
