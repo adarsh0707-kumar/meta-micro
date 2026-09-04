@@ -19,6 +19,7 @@ from app.routers import (
     students,
     templates,
     test_scores,
+    whatsapp,
 )
 from app.services.scheduler import start_scheduler
 
@@ -63,6 +64,7 @@ app.include_router(automations.router)
 app.include_router(setup.router)
 app.include_router(staff.router)
 app.include_router(institute.router)
+app.include_router(whatsapp.router)
 
 
 @app.get("/api/health")

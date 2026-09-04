@@ -198,6 +198,35 @@ class MessageLog(Base):
     sent_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
+class WhatsAppEvent(Base):
+    """Everything Meta's webhook tells us: inbound messages and delivery statuses.
+
+    Kept in its own table rather than as columns on `message_logs` because
+    `create_all` cannot add columns to an existing table and this project has no
+    migrations yet. Status events are therefore joined to a send by `wa_message_id`
+    at read time.
+    """
+
+    __tablename__ = "whatsapp_events"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    # "inbound" for a parent's message, "status" for sent/delivered/read/failed.
+    event_type: Mapped[str] = mapped_column(String(20), index=True)
+    wa_message_id: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True)
+    # Digits-only, matching the normalisation used when sending.
+    contact_phone: Mapped[str] = mapped_column(String(20), index=True)
+    contact_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    phone_number_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    body: Mapped[str | None] = mapped_column(Text, nullable=True)
+    status: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    # Best-effort: resolved by matching the contact against student phone numbers.
+    institute_id: Mapped[int | None] = mapped_column(ForeignKey("institutes.id"), nullable=True)
+    student_id: Mapped[int | None] = mapped_column(ForeignKey("students.id"), nullable=True)
+    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    raw: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
 class AutomationSetting(Base):
     __tablename__ = "automation_settings"
     __table_args__ = (UniqueConstraint("institute_id", "category", name="uq_automation_institute_category"),)

@@ -273,6 +273,11 @@ class MessagePreviewRow(BaseModel):
     body: str
     deliverable: bool
     reason: str | None = None
+    # Meta accepts free-form text only within 24h of the contact's last message.
+    # Outside that window this send needs an approved template, which is not
+    # built yet -- so warn rather than let it fail at the provider.
+    in_service_window: bool = False
+    warning: str | None = None
 
 
 class MessagePreviewOut(BaseModel):
@@ -282,6 +287,7 @@ class MessagePreviewOut(BaseModel):
     skipped_count: int
     provider: str
     would_really_send: bool
+    outside_window_count: int = 0
     rows: list[MessagePreviewRow]
 
 

@@ -204,8 +204,18 @@ without sending anything.
 { "template_name": "Fee Reminder Hindi", "total_selected": 3,
   "deliverable_count": 2, "skipped_count": 1, "provider": "log",
   "would_really_send": false,
+  "outside_window_count": 1,
   "rows": [ { "student_id": 5, "student_name": "No Phone", "recipient_phone": null,
-              "body": "…", "deliverable": false, "reason": "No phone number" } ] }
+              "body": "…", "deliverable": false, "reason": "No phone number",
+              "in_service_window": false, "warning": null } ] }
+```
+
+`in_service_window` is true when that contact messaged the business number within
+the last 24 hours, which requires the webhook to be receiving. `outside_window_count`
+counts deliverable recipients Meta would reject for plain text — populated only
+when the provider is live, since the log provider has no such limit.
+
+```json
 ```
 
 ### `POST /messaging/fee-reminders` and `POST /messaging/parent-updates`
@@ -259,6 +269,31 @@ Upsert by (institute, category):
 `day_of_month` defaults to 1 and must be 1-28, so the trigger exists in every
 month; anything else is a 422. `template_id` may be null, in which case the
 scheduler skips the automation; a template outside the institute is a 404.
+
+---
+
+## WhatsApp webhook — `/api/whatsapp`
+
+### `GET /whatsapp/webhook`
+Meta's subscription handshake. No auth. Echoes `hub.challenge` as plain text when
+`hub.verify_token` equals `WHATSAPP_VERIFY_TOKEN`; 403 on mismatch, 503 when the
+token is unconfigured.
+
+### `POST /whatsapp/webhook`
+No auth — authenticity is the `X-Hub-Signature-256` HMAC of the raw body with
+`WHATSAPP_APP_SECRET`. **403 when the signature is absent, wrong, or the app
+secret is unset.** Otherwise always 200, even on an unparseable body, because
+Meta retries any non-2xx and a parse failure would become a redelivery loop.
+
+Stores `value.messages[]` as inbound events (resolved to a student and institute
+by phone where possible) and `value.statuses[]` as delivery receipts.
+
+```json
+{ "received": true, "stored": 2 }
+```
+
+### `GET /whatsapp/inbound`
+This institute's 100 most recent inbound messages, newest first.
 
 ---
 

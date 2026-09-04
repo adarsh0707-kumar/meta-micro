@@ -150,6 +150,15 @@ export default function SendMessagePanel({ category, sendFn, title }) {
             )}
           </p>
 
+          {preview.outside_window_count > 0 && (
+            <p className="mb-4 rounded-2xl border-2 border-primary bg-primary/5 px-4 py-3 text-sm">
+              <strong>{preview.outside_window_count} recipient(s) are outside Meta&apos;s 24-hour window.</strong>{" "}
+              Meta only allows free-form text within 24 hours of a parent messaging your business
+              number. These will be rejected and logged as failed until approved message templates
+              are set up.
+            </p>
+          )}
+
           <div className="mb-4 max-h-72 overflow-y-auto rounded-2xl border-2 border-ink/10">
             {preview.rows.map((row) => (
               <div key={row.student_id} className="border-b border-ink/5 px-4 py-3 last:border-0">
@@ -162,6 +171,7 @@ export default function SendMessagePanel({ category, sendFn, title }) {
                 <p className={`mt-1 text-sm ${row.deliverable ? "text-ink/70" : "text-ink/30 line-through"}`}>
                   {row.body}
                 </p>
+                {row.warning && <p className="mt-1 text-sm font-semibold text-primary">{row.warning}</p>}
               </div>
             ))}
           </div>

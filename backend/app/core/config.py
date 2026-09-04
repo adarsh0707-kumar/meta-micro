@@ -19,6 +19,10 @@ class Settings(BaseSettings):
     whatsapp_phone_number_id: str = ""
     whatsapp_access_token: str = ""
     whatsapp_api_base_url: str = "https://graph.facebook.com/v20.0"
+    # Webhook: the token you type into Meta's dashboard, and the app secret used
+    # to verify that a delivery really came from Meta.
+    whatsapp_verify_token: str = ""
+    whatsapp_app_secret: str = ""
 
     cors_origins: list[str] = ["http://localhost:5173"]
 

@@ -20,6 +20,7 @@ from app.services.whatsapp import (
     provider_status,
     render_template,
 )
+from app.services.whatsapp_webhook import last_inbound_at, within_service_window
 
 router = APIRouter(prefix="/api/messaging", tags=["messaging"])
 
@@ -83,6 +84,34 @@ def preview(payload: SendMessageRequest, user: User = Depends(get_current_user),
     """Renders exactly what a send would deliver, without sending anything."""
     template, rows = _resolve(payload, user, db)
     name, would_send, _ = provider_status()
+
+    # Meta rejects free-form text outside the 24-hour service window, so flag it
+    # here rather than letting each send fail at the provider.
+    inbound = last_inbound_at(db, {phone for _, phone, _, _ in rows if phone})
+    preview_rows = []
+    outside = 0
+    for student, phone, body, reason in rows:
+        in_window = within_service_window(inbound.get(phone)) if phone else False
+        warning = None
+        if reason is None and would_send and not in_window:
+            outside += 1
+            warning = (
+                "Outside Meta's 24-hour window -- this parent has not messaged the "
+                "business number recently, so Meta will reject plain text."
+            )
+        preview_rows.append(
+            MessagePreviewRow(
+                student_id=student.id,
+                student_name=student.name,
+                recipient_phone=phone,
+                body=body,
+                deliverable=reason is None,
+                reason=reason,
+                in_service_window=in_window,
+                warning=warning,
+            )
+        )
+
     return MessagePreviewOut(
         template_name=template.name,
         total_selected=len(rows),
@@ -90,17 +119,8 @@ def preview(payload: SendMessageRequest, user: User = Depends(get_current_user),
         skipped_count=sum(1 for _, _, _, reason in rows if reason is not None),
         provider=name,
         would_really_send=would_send,
-        rows=[
-            MessagePreviewRow(
-                student_id=s.id,
-                student_name=s.name,
-                recipient_phone=phone,
-                body=body,
-                deliverable=reason is None,
-                reason=reason,
-            )
-            for s, phone, body, reason in rows
-        ],
+        outside_window_count=outside,
+        rows=preview_rows,
     )
 
 

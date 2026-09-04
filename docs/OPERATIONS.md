@@ -98,6 +98,45 @@ If a required value is missing the app now **refuses** to send — the API retur
 logging, because a reminder that was never delivered must not be recorded as
 `sent`.
 
+### Receiving messages (webhook)
+
+Meta POSTs inbound messages and delivery receipts to a webhook. The app exposes
+`/api/whatsapp/webhook` for this. It matters beyond replies: an inbound message
+is what **opens** the 24-hour window, so without the webhook the app cannot know
+who it is allowed to send plain text to.
+
+Two settings are needed in `backend/.env`:
+
+```bash
+WHATSAPP_VERIFY_TOKEN=any-string-you-choose   # also typed into Meta's dashboard
+WHATSAPP_APP_SECRET=<from Meta app settings>  # required -- see below
+```
+
+`WHATSAPP_APP_SECRET` is not optional. The endpoint is public because Meta calls
+it, so authenticity comes from the `X-Hub-Signature-256` HMAC of the raw body.
+Without the secret the app cannot distinguish Meta from anyone else on the
+internet, and rejects every delivery with 403 — deliberately, since a forged
+inbound message would otherwise open a send window for an attacker.
+
+Meta needs a public HTTPS URL. For local development, tunnel it:
+
+```bash
+ngrok http 8000     # then use https://<id>.ngrok.io/api/whatsapp/webhook
+```
+
+In the Meta dashboard, WhatsApp → Configuration → Edit, set the callback URL and
+your verify token, and subscribe to the **messages** field. Meta immediately
+GETs the URL with `hub.challenge`; the app echoes it when the token matches.
+
+What arrives is stored in `whatsapp_events`:
+
+- `event_type='inbound'` — a parent's message, matched to a student and institute
+  by phone number where possible
+- `event_type='status'` — sent / delivered / read / failed for something sent,
+  keyed by the `wamid`
+
+`GET /api/whatsapp/inbound` returns this institute's recent inbound messages.
+
 ### Meta's 24-hour window
 
 Meta's Cloud API only accepts free-form text within 24 hours of the recipient's
@@ -108,8 +147,12 @@ to a parent who has never messaged the institute will be rejected by Meta and
 recorded as `failed` with the reason in `provider_response`.
 
 This is the single most likely reason a correctly configured deploy still does
-not deliver. Registering Meta-side templates and sending `type: "template"` is
-the fix, and is not yet built.
+not deliver. Once the webhook is live the app tracks who is inside the window,
+and `POST /api/messaging/preview` reports `outside_window_count` plus a per-row
+warning so a doomed send is visible before it goes out rather than after.
+
+Registering Meta-side templates and sending `type: "template"` is the actual fix
+for first contact, and is not yet built.
 
 ## 3. Logging
 
